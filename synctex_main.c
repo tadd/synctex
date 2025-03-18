@@ -243,15 +243,15 @@ int main(int argc, char *argv[])
 }
 
 char * synctex_view_i(char *);
-int synctex_view_proceed();
+int synctex_view_proceed(void);
 
 char * synctex_edit_o(char *);
-int synctex_edit_proceed();
+int synctex_edit_proceed(void);
 
 synctex_scanner_p g_scanner = NULL;
 time_t g_last_modification_time = 0;
 
-int synctex_synchronize();
+int synctex_synchronize(void);
 
 char * g_output   = NULL;
 char * g_directory = NULL;
