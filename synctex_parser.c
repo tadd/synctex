@@ -5051,6 +5051,23 @@ static _synctex_fs_s _synctex_scan_float_and_dimension(synctex_scanner_p scanner
     _synctex_fs_s fs = {0,0};
     _synctex_zs_s zs = {0,0};
     char * endptr = NULL;
+    static const struct unit_t {
+        const char *const name;
+        const float ratio;
+    } units[] = {
+        { "in", 72.27f*65536 },
+        { "cm", 72.27f*65536/2.54f },
+        { "mm", 72.27f*65536/25.4f },
+        { "pt", 65536.0f },
+        { "bp", 72.27f/72*65536.0f },
+        { "pc", 12.0*65536.0f },
+        { "sp", 1.0f },
+        { "dd", 1238.0f/1157*65536.0f },
+        { "cc", 14856.0f/1157*65536 },
+        { "nd", 685.0f/642*65536 },
+        { "nc", 1370.0f/107*65536 },
+    };
+    static const size_t tabsize = sizeof(units) / sizeof(units[0]);
 #ifdef HAVE_SETLOCALE
     char * loc = setlocale(LC_NUMERIC, NULL);
 #endif
@@ -5074,52 +5091,17 @@ static _synctex_fs_s _synctex_scan_float_and_dimension(synctex_scanner_p scanner
         return (_synctex_fs_s){0,SYNCTEX_STATUS_ERROR};
     }
     SYNCTEX_CUR = endptr;
-    if ((fs.status = _synctex_match_string(scanner,"in")) >= SYNCTEX_STATUS_OK) {
-        fs.value *= 72.27f*65536;
-    } else if (fs.status<SYNCTEX_STATUS_EOF) {
-    report_unit_error:
-        _synctex_error("problem with unit.");
-        return fs;
-    } else if ((fs.status = _synctex_match_string(scanner,"cm")) >= SYNCTEX_STATUS_OK) {
-        fs.value *= 72.27f*65536/2.54f;
-    } else if (fs.status<SYNCTEX_STATUS_EOF) {
-        goto report_unit_error;
-    } else if ((fs.status = _synctex_match_string(scanner,"mm")) >= SYNCTEX_STATUS_OK) {
-        fs.value *= 72.27f*65536/25.4f;
-    } else if (fs.status<SYNCTEX_STATUS_EOF) {
-        goto report_unit_error;
-    } else if ((fs.status = _synctex_match_string(scanner,"pt")) >= SYNCTEX_STATUS_OK) {
-        fs.value *= 65536.0f;
-    } else if (fs.status<SYNCTEX_STATUS_EOF) {
-        goto report_unit_error;
-    } else if ((fs.status = _synctex_match_string(scanner,"bp")) >= SYNCTEX_STATUS_OK) {
-        fs.value *= 72.27f/72*65536.0f;
-    }  else if (fs.status<SYNCTEX_STATUS_EOF) {
-        goto report_unit_error;
-    } else if ((fs.status = _synctex_match_string(scanner,"pc")) >= SYNCTEX_STATUS_OK) {
-        fs.value *= 12.0*65536.0f;
-    }  else if (fs.status<SYNCTEX_STATUS_EOF) {
-        goto report_unit_error;
-    } else if ((fs.status = _synctex_match_string(scanner,"sp")) >= SYNCTEX_STATUS_OK) {
-        fs.value *= 1.0f;
-    }  else if (fs.status<SYNCTEX_STATUS_EOF) {
-        goto report_unit_error;
-    } else if ((fs.status = _synctex_match_string(scanner,"dd")) >= SYNCTEX_STATUS_OK) {
-        fs.value *= 1238.0f/1157*65536.0f;
-    }  else if (fs.status<SYNCTEX_STATUS_EOF) {
-        goto report_unit_error;
-    } else if ((fs.status = _synctex_match_string(scanner,"cc")) >= SYNCTEX_STATUS_OK) {
-        fs.value *= 14856.0f/1157*65536;
-    } else if (fs.status<SYNCTEX_STATUS_EOF) {
-        goto report_unit_error;
-    } else if ((fs.status = _synctex_match_string(scanner,"nd")) >= SYNCTEX_STATUS_OK) {
-        fs.value *= 685.0f/642*65536;
-    }  else if (fs.status<SYNCTEX_STATUS_EOF) {
-        goto report_unit_error;
-    } else if ((fs.status = _synctex_match_string(scanner,"nc")) >= SYNCTEX_STATUS_OK) {
-        fs.value *= 1370.0f/107*65536;
-    } else if (fs.status<SYNCTEX_STATUS_EOF) {
-        goto report_unit_error;
+    for (size_t i = 0; i < tabsize; i++) {
+        const struct unit_t *u = &units[i];
+        fs.status = _synctex_match_string(scanner,u->name);
+        if (fs.status < SYNCTEX_STATUS_EOF) {
+            _synctex_error("problem with unit.");
+            return fs;
+        }
+        if (fs.status >= SYNCTEX_STATUS_OK) {
+            fs.value *= u->ratio;
+            break;
+        }
     }
     return fs;
 }
