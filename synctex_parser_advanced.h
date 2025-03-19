@@ -104,7 +104,7 @@ extern "C" {
      */
     
     /*
-     *  These are the mask hekpers for the synctex node types.
+     *  These are the mask helpers for the synctex node types.
      */
     enum {
         synctex_shift_root,
@@ -120,7 +120,7 @@ extern "C" {
     };
     /*
      *  These are the masks for the synctex node types.
-     *  int's are 32 bits at leats.
+     *  int's are 32 bits at least.
      */
     enum {
         synctex_mask_root      = 1,
