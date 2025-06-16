@@ -1,0 +1,49 @@
+name: CI Tests
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt install -y --no-install-recommends texlive-binaries texlive-luatex meson #lua5.4 ninja-build
+      - name: Setup build
+        run: |
+          cd meson
+          meson setup build || {
+            echo --------------------
+            echo Printing failure log
+            echo --------------------
+            cat build/meson-logs/meson-log.txt
+            false
+          }
+      - name: Compile
+        run: |
+          cd meson
+          meson compile -C build || {
+            echo --------------------
+            echo Printing failure log
+            echo --------------------
+            cat build/meson-logs/meson-log.txt
+            false
+          }
+      - name: Run tests
+        run: |
+          cd meson
+          meson test -C build || {
+            echo --------------------
+            echo Printing failure log
+            echo --------------------
+            cat build/meson-logs/meson-log.txt
+            false
+          }
